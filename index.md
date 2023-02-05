@@ -1,16 +1,20 @@
 # Leina's Super Gameboy experiments
 
-## Guides for adding the most to a GB game
+Note: assembly syntax is WLA-DX for SNES code, and RGBDS for GB code
+
+## Hacks/the actual guides
+
+Custom attributes
+
+OBJ_TRN
+
+## Ramblings about my approaches to the guides
 
 Custom music: Midi to N-SPC's format
 
 Controlling the game with the SNES mouse
 
 [OBJ_TRN](obj_trn.md)
-
-## Hacks
-
-Custom attributes
 
 ## BIOS findings
 

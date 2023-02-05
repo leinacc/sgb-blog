@@ -2,28 +2,28 @@
 
 `OBJ_TRN` is one of the documented packet commands that can be sent to the SGB, but was not used in commercial games, and was even stubbed in the SGB BIOS (its handler just has `rts`).
 
-It allowed you to display custom SNES-quality 4bpp sprites without writing SNES code. You would just write SNES OAM data to Gameboy VRAM (Nintendo describes writing it to the last tilemap row), and the SGB BIOS would pick it up and transform it into SNES sprites.
+It allowed you to display custom SNES-quality 4bpp sprites without writing SNES code. You would just write SNES OAM data to Gameboy VRAM, and the SGB BIOS would pick it up and transform it into SNES sprites.
 
-In order to not show artifacts due to non-graphical data appearing on the screen, OBJ_TRN would specifically hide the last tilemap row.
+In order to not show artifacts due to non-graphical data appearing on the screen, OBJ_TRN would specifically hide the last tilemap row, so that's where you would put your SNES OAM data.
 
 It had conflicts with some other SGB capability:
 
 * Generic palette fading - usually when fading happens (borders/certain sub-menus/etc), all palettes are faded. `OBJ_TRN` lets you set OBJ palettes that were sent via PAL_TRN, but these are quickly overridden when a generic SGB fade in happens.
 
-* OAM update code - when the SGB needs to display sprites (menu cursor/attract mode/etc), the SGB BIOS will run its update code in place of `OBJ_TRN`'s specific update code. These scenarios also override OAM tile data.
+* OAM update code - when the SGB needs to display sprites (menu cursor/attract mode/etc), the SGB BIOS will run its OAM update code in place of `OBJ_TRN`'s specific update code. These scenarios also override OAM tile data.
 
 ## Preventing conflicts
 
-The above could be prevented by disallowing use of the SGB menu, and making sure not to send a border, though there was no official way to do this. The following relevant code, run in a loop, in the BIOS might shine a light on how we could do this:
+The above could be prevented by making sure not to send a border, and disallowing use of the SGB menu, though there was no official way to do this. The following relevant code, run in a loop, in the BIOS might shine a light on how WE could do this:
 
 ```
     jsr CheckShouldOpenSGBMenu                   ; $cee0 : $20, $06, $cf
     jsr JmpDmaTransferNewGBScreenRows            ; $cee3 : $20, $90, $ff
-    jsr TryCheckingUnlocksBtnsState.l            ; $cee6 : $22, $7d, $dd, $01
+    jsl TryCheckingUnlocksBtnsState              ; $cee6 : $22, $7d, $dd, $01
     lda #$03                                     ; $ceea : $a9, $03
     jsr wMiscSGBEventsHook                       ; $ceec : $20, $18, $08
     jsr JmpDmaTransferNewGBScreenRows            ; $ceef : $20, $90, $ff
-    jsr UpdateFramesHeldRL.l                     ; $cef2 : $22, $b8, $d9, $01
+    jsl UpdateFramesHeldRL                       ; $cef2 : $22, $b8, $d9, $01
     jsr JmpDmaTransferNewGBScreenRows            ; $cef6 : $20, $90, $ff
 
 ...
@@ -75,7 +75,7 @@ UpdateFramesHeldRL:
 @afterP1Joy:
 ```
 
-What's happening here? `wFramesHeldP1JoyRL` will increment from $00 to $28 whenever either L or R is held. `CheckShouldOpenSGBMenu` will call `handleSGBMainMenu` (which handles the menu) when the counter hasn't yet reached $28, but both L and R is held.
+What's happening here? `wFramesHeldP1JoyRL` will increment from $00 to $28 whenever either L or R is held. `CheckShouldOpenSGBMenu` will call `handleSGBMainMenu` (which handles opening the menu, and other functionality nested in it) when the counter hasn't yet reached $28, but both L and R is held.
 
 What is the relevance of the counter? Well, to open the menu L and R must be held around the same time. In the case that someone holds L for a few seconds, then holds R, the counter will have already maxed out preventing opening the menu.
 
@@ -251,4 +251,8 @@ After filling the GB tilemap with our OBJ tile data, we can then send:
 
 ## OBJ_TRN with border
 
-TODO:
+Ideally, we want maximum SGB capability, and realistically, how can we say no to SGB borders?. As for re-enabling the SGB menu, that introduces complexity with attract modes taking up OBJ tile data, alternative OAM update routines, and alternative ways of palette fading, so we will forget it for now.
+
+What problems do we need to solve to get `OBJ_TRN` working with borders?
+
+* TODO
