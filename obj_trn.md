@@ -79,9 +79,9 @@ What's happening here? `wFramesHeldP1JoyRL` will increment from $00 to $28 whene
 
 What is the relevance of the counter? Well, to open the menu L and R must be held around the same time. In the case that someone holds L for a few seconds, then holds R, the counter will have already maxed out preventing opening the menu.
 
-You might think the solution would be to set the counter to $28 in `wMiscSGBEventsHook`, but if L and R are held on the same frame, `UpdateFramesHeldRL` would clear the counter, then in the next loop of the above code, `CheckShouldOpenSGBMenu` would see a counter of 0 with both buttons held, and open the menu.
+You might think the solution would be to just set the counter to $28 in `wMiscSGBEventsHook`, but if L and R are held on the same frame, `UpdateFramesHeldRL` would clear the counter, then in the next loop of the above code, `CheckShouldOpenSGBMenu` would see a counter of 0 with both buttons held, and open the menu.
 
-Instead, we can jump over `UpdateFramesHeldRL` as it is only used for the SGB menu, but `DATA_SND`ing the following:
+Instead, we can both set the counter, and jump over `UpdateFramesHeldRL` as it is only used for the SGB menu, by `DATA_SND`ing the following:
 
 ```
 .org $818
@@ -93,6 +93,8 @@ MiscSGBEventsHook:
     cmp #$03
     bne @done
 
+    lda #$28
+    sta wFramesHeldP1JoyRL.w
     pla
     pla
     jmp $cef6 ; address of the last `JmpDmaTransferNewGBScreenRows` in the loop code
