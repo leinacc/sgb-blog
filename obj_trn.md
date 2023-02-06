@@ -8,7 +8,7 @@ In order to not show artifacts due to non-graphical data appearing on the screen
 
 It had conflicts with some other SGB capability:
 
-* Generic palette fading - usually when fading happens (borders/certain sub-menus/etc), all palettes are faded. `OBJ_TRN` lets you set OBJ palettes that were sent via PAL_TRN, but these are quickly overridden when a generic SGB fade in happens.
+* Generic palette fading - usually when fading happens (borders/certain sub-menus/etc), all palettes are faded. `OBJ_TRN` lets you set OBJ palettes that were sent via PAL_TRN, but these are overridden if sent during a generic SGB fade out/in. We can avoid most border fades by disabling the SGB menu, but for `PCT_TRN` borders, we need to wait some frames after that packet is sent, so that `OBJ_TRN` is likely sent after the fade in.
 
 * OAM update code - when the SGB needs to display sprites (menu cursor/attract mode/etc), the SGB BIOS will run its OAM update code in place of `OBJ_TRN`'s specific update code. These scenarios also override OAM tile data.
 
@@ -30,23 +30,23 @@ The above could be prevented by making sure not to send a border, and disallowin
 
 CheckShouldOpenSGBMenu:
 ; Jump away if we've held L and/or R too long
-    lda wFramesHeldP1JoyRL.w                     ; $cf06 : $ad, $43, $0c
+    lda wFramesHeldP1JoyRL                       ; $cf06 : $ad, $43, $0c
     cmp #$28                                     ; $cf09 : $c9, $28
     beq @checkP2                                 ; $cf0b : $f0, $20
 
 ; Jump away if a non-LR button is also held
-    lda wJoy1High.w                              ; $cf0d : $ad, $12, $0f
+    lda wJoy1High                                ; $cf0d : $ad, $12, $0f
     bne @checkP2                                 ; $cf10 : $d0, $1b
 
-    lda wJoy1Low.w                               ; $cf12 : $ad, $11, $0f
+    lda wJoy1Low                                 ; $cf12 : $ad, $11, $0f
     and #$f0                                     ; $cf15 : $29, $f0
     cmp #JOYF_L|JOYF_R                           ; $cf17 : $c9, $30
     bne @checkP2                                 ; $cf19 : $d0, $12
 
 ; Handle SGB menu
-    stz wSGBMenuCursorController.w               ; $cf1b : $9c, $1f, $0c
+    stz wSGBMenuCursorController                 ; $cf1b : $9c, $1f, $0c
     lda #$01                                     ; $cf1e : $a9, $01
-    sta wInSGBMainMenuWithMainGamepad.w          ; $cf20 : $8d, $01, $0f
+    sta wInSGBMainMenuWithMainGamepad            ; $cf20 : $8d, $01, $0f
     jsr handleSGBMainMenu                        ; $cf23 : $20, $ee, $d0
 ...
 @checkP2:
@@ -56,21 +56,21 @@ CheckShouldOpenSGBMenu:
 UpdateFramesHeldRL:
 ; If any of L and R are held, +1 to wFramesHeldP1JoyRL
 ; When both are released, clear it
-    lda wJoy1Low.w                               ; $d9b8 : $ad, $11, $0f
+    lda wJoy1Low                                 ; $d9b8 : $ad, $11, $0f
     and #JOYF_L|JOYF_R                           ; $d9bb : $29, $30
     bne @incP1JoyheldFrames                      ; $d9bd : $d0, $05
 
-    stz wFramesHeldP1JoyRL.w                     ; $d9bf : $9c, $43, $0c
+    stz wFramesHeldP1JoyRL                       ; $d9bf : $9c, $43, $0c
     bra @afterP1Joy                              ; $d9c2 : $80, $0b
 
 @incP1JoyheldFrames:
 ; wFramesHeldP1JoyRL maxes out at $28
-    lda wFramesHeldP1JoyRL.w                     ; $d9c4 : $ad, $43, $0c
+    lda wFramesHeldP1JoyRL                       ; $d9c4 : $ad, $43, $0c
     ina                                          ; $d9c7 : $1a
     cmp #$29                                     ; $d9c8 : $c9, $29
     beq @afterP1Joy                              ; $d9ca : $f0, $03
 
-    sta wFramesHeldP1JoyRL.w                     ; $d9cc : $8d, $43, $0c
+    sta wFramesHeldP1JoyRL                       ; $d9cc : $8d, $43, $0c
 
 @afterP1Joy:
 ```
@@ -94,7 +94,7 @@ MiscSGBEventsHook:
     bne @done
 
     lda #$28
-    sta wFramesHeldP1JoyRL.w
+    sta wFramesHeldP1JoyRL  
     pla
     pla
     jmp $cef6 ; address of the last `JmpDmaTransferNewGBScreenRows` in the loop code
@@ -134,7 +134,7 @@ CMD_OBJ_TRN:
 ; unused
 _CMD_OBJ_TRN:
 ; If bit 0 clear, cancel OBJ mode, else enable it
-    lda wSGBPacketsData.w+1                      ; $c928 : $ad, $01, $06
+    lda wSGBPacketsData  +1                      ; $c928 : $ad, $01, $06
 ...
 ```
 
@@ -161,8 +161,8 @@ CopyGBscreenDataToObjTrnTileData:
 .index 8
     sep #ACCU_8|IDX_8                            ; $c7a5 : $e2, $30
     lda #$01                                     ; $c7a7 : $a9, $01
-    sta wPendingChrTrnTileDataUpdate.w           ; $c7a9 : $8d, $11, $02
-    sta wHeavyIrqUpdatesPending.w                ; $c7ac : $8d, $17, $02
+    sta wPendingChrTrnTileDataUpdate             ; $c7a9 : $8d, $11, $02
+    sta wHeavyIrqUpdatesPending                  ; $c7ac : $8d, $17, $02
     rts                                          ; $c7af : $60
 
 ```
@@ -221,7 +221,7 @@ PreExecPacketCmdHook:
 .org $900
 
 _PreExecPacketCmdHook:
-    lda wCurrPacketCmd.w ; $02c2
+    lda wCurrPacketCmd ; $02c2
     cmp #$18 ; OBJ_TRN's code
     bne @done
 
@@ -251,8 +251,6 @@ After filling the GB tilemap with our OBJ tile data, we can then send:
 
 ## OBJ_TRN with border
 
-Ideally, we want maximum SGB capability, and realistically, how can we say no to SGB borders?. As for re-enabling the SGB menu, that introduces complexity with attract modes taking up OBJ tile data, alternative OAM update routines, and alternative ways of palette fading, so we will forget it for now.
+Once OBJ mode is in effect, border fades will not affect OBJ palettes. However, if an `OBJ_TRN` is sent during a border fade, its palettes will continue to fade out, and not fade back in.
 
-What problems do we need to solve to get `OBJ_TRN` working with borders?
-
-* TODO
+TODO: instead of waiting some frames to send `OBJ_TRN`, `DATA_SND` some hook code that will wait for a pending border fade to finish before calling `OBJ_TRN`
