@@ -5,6 +5,8 @@ Considerations:
 * Firstly, you need to send the patch to allow use of `OBJ_TRN` as it is stubbed out in the SGB BIOS
 * Make sure to send `OBJ_TRN` before `PCT_TRN`. This will ensure the border fading in does not clear `OBJ_TRN`s palettes
 * You may want to prevent use of the SGB menu which will overwrite OAM tile data, and set OBJ palettes
+* The last row of tilemap will be whited out. If you have a border, cover that last row. If not, make sure your game melds well with the white (make most of your backgrounds white/have a bottom status bar/etc)
+* Use this [guide](https://gbdev.io/pandocs/SGB_Command_Border.html#sgb-command-18--obj_trn) to see how setting up the tile data and tilemap for the last GB row affects your custom SNES objects
 
 ## Patch: allowing use of OBJ_TRN
 
