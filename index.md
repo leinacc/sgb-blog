@@ -8,13 +8,15 @@ Custom attributes
 
 Controlling the game with the SNES mouse
 
-OBJ_TRN
+[OBJ_TRN](obj_trn_guide.md)
 
 ## Ramblings about my approaches to the guides
 
+Custom attributes
+
 Controlling the game with the SNES mouse
 
-[OBJ_TRN](obj_trn.md)
+[OBJ_TRN](obj_trn_rambling.md)
 
 ## Game findings
 
