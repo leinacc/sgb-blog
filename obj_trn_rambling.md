@@ -8,13 +8,13 @@ In order to not show artifacts due to non-graphical data appearing on the screen
 
 It had conflicts with some other SGB capability:
 
-* Generic palette fading - usually when fading happens (borders/certain sub-menus/etc), all palettes are faded. `OBJ_TRN` lets you set OBJ palettes that were sent via PAL_TRN, but these are overridden if sent during a generic SGB fade out/in. We can avoid most border fades by disabling the SGB menu, but for `PCT_TRN` borders, we need to wait some frames after that packet is sent, so that `OBJ_TRN` is likely sent after the fade in.
+* Generic palette fading - usually when fading happens (borders/certain sub-menus/etc), all palettes are faded. `OBJ_TRN` lets you set OBJ palettes that were sent via PAL_TRN, but these are overridden if sent during a generic SGB fade out/in. We can avoid most border fades by disabling the SGB menu, and for `PCT_TRN` borders, we simply need to send `OBJ_TRN` before `PCT_TRN`; a branch in BIOS code will then prevent updating any OBJ palettes.
 
 * OAM update code - when the SGB needs to display sprites (menu cursor/attract mode/etc), the SGB BIOS will run its OAM update code in place of `OBJ_TRN`'s specific update code. These scenarios also override OAM tile data.
 
 ## Preventing conflicts
 
-The above could be prevented by making sure not to send a border, and disallowing use of the SGB menu, though there was no official way to do this. The following relevant code, run in a loop, in the BIOS might shine a light on how WE could do this:
+The conflicts could be prevented by disallowing use of the SGB menu, though there was no official way to do this. The following relevant code, run in a loop, in the BIOS might shine a light on how WE could do this:
 
 ```
     jsr CheckShouldOpenSGBMenu                   ; $cee0 : $20, $06, $cf
@@ -243,14 +243,12 @@ _PreExecPacketCmdHook:
 
 After filling the GB tilemap with our OBJ tile data, we can then send:
 ```
-    db ($10<<3)|1, $00,$b0,$7e ; `DATA_TRN` to $7eb000 (OBJ tile data buffer)
+; `DATA_TRN` to $7eb000 (OBJ tile data buffer)
+    db ($10<<3)|1, $00,$b0,$7e
+
 ; `DATA_SND` 2 bytes to $0211, to update vram $a000-$afff (replace last byte with 3 to update vram $b000-$bfff)
     db ($0f<<3)|1, $11,$02,$00, $02, $01,$02
+
+; `DATA_SND` a byte for the NMI vector to DMA the data
     db ($0f<<3)|1, $17,$02,$00, $01, $01
 ```
-
-## OBJ_TRN with border
-
-Once OBJ mode is in effect, border fades will not affect OBJ palettes. However, if an `OBJ_TRN` is sent during a border fade, its palettes will continue to fade out, and not fade back in.
-
-The easiest way to resolve this is to simply send `OBJ_TRN` before `PCT_TRN`.
