@@ -106,7 +106,7 @@ MiscSGBEventsHook:
 
 ## Patching OBJ_TRN
 
-So now we have a borderless game, where the menu can't be opened to further screw things. We still can't use `OBJ_TRN` because it just runs `rts`:
+So now the menu can't be opened to further screw things. We still can't use `OBJ_TRN` because it just runs `rts`:
 
 ```
 ; Byte  Content
@@ -243,14 +243,14 @@ _PreExecPacketCmdHook:
 
 After filling the GB tilemap with our OBJ tile data, we can then send:
 ```
-    DATA_TRN|1, $00,$b0,$7e ; send to $7eb000 (OBJ tile data buffer)
-; send 2 bytes to $0211, to update vram $a000-$afff (replace last byte with 3 to update vram $b000-$bfff)
-    DATA_SND|1, $11,$02,$00, $02, $01,$02
-    DATA_SND|1, $17,$02,$00, $01, $01
+    db ($10<<3)|1, $00,$b0,$7e ; `DATA_TRN` to $7eb000 (OBJ tile data buffer)
+; `DATA_SND` 2 bytes to $0211, to update vram $a000-$afff (replace last byte with 3 to update vram $b000-$bfff)
+    db ($0f<<3)|1, $11,$02,$00, $02, $01,$02
+    db ($0f<<3)|1, $17,$02,$00, $01, $01
 ```
 
 ## OBJ_TRN with border
 
 Once OBJ mode is in effect, border fades will not affect OBJ palettes. However, if an `OBJ_TRN` is sent during a border fade, its palettes will continue to fade out, and not fade back in.
 
-TODO: instead of waiting some frames to send `OBJ_TRN`, `DATA_SND` some hook code that will wait for a pending border fade to finish before calling `OBJ_TRN`
+The easiest way to resolve this is to simply send `OBJ_TRN` before `PCT_TRN`.
