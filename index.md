@@ -2,9 +2,11 @@
 
 Note: assembly syntax is WLA-DX for SNES code, and RGBDS for GB code
 
-## Hacks/the actual guides
+## Hacks/guides
 
 Custom attributes
+
+Controlling the game with the SNES mouse
 
 OBJ_TRN
 
@@ -12,9 +14,15 @@ OBJ_TRN
 
 Custom music: Midi to N-SPC's format
 
-Controlling the game with the SNES mouse
+Controlling the game with the SNES mouse]
 
 [OBJ_TRN](obj_trn.md)
+
+## Game findings
+
+[Donkey Kong (1994)](dk94.md)
+
+[Space Invaders](spaceInvaders.md)
 
 ## BIOS findings
 
