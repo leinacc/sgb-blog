@@ -10,7 +10,7 @@ The packets we can rely on for LLE detection include `DATA_SND`, `DATA_TRN` and 
 2. Send the following patch:
 
 ```
-.org $0808
+.org $808
 
 .accu 8
 .index 8
