@@ -27,4 +27,4 @@ As a `DATA_SND` packet:
     db ($0f<<3)|1, $08,$08,$00, $07, $a9,$12,$8f,$05,$60,$00,$60
 ```
 
-3. A typical `PollInput` routine will `cpl` and `swap` the value to be $de. Or if you don't want it manipulated, don't `cpl` Player 2's input, put the dpad in the 'buttons held' low nybble and face buttons in the high nybble
+3. A typical `PollInput` routine will `cpl` and `swap` the value to be $de. Or if you don't want to waste cycles having it manipulated, don't `cpl` Player 2's input, selecting dpad in `rP1` will give `$2` in its low nybble and selecting the face buttons in `rP1` will give `$1` in its low nybble.
