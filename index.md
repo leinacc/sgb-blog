@@ -2,17 +2,21 @@
 
 Note: assembly syntax is WLA-DX for SNES code, and RGBDS for GB code
 
-## Hacks/guides
+## Guides
 
-Custom attributes
+[LLE detection](lle_detection.md)
 
 Controlling the game with the SNES mouse
 
 [OBJ_TRN](obj_trn_guide.md)
 
-## Ramblings about my approaches to the guides
+## Hacks
 
 Custom attributes
+
+Custom attract mode
+
+## Ramblings about my approaches to the guides
 
 Controlling the game with the SNES mouse
 
