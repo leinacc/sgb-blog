@@ -7,7 +7,7 @@ The packets we can rely on for LLE detection include `DATA_SND`, `DATA_TRN` and 
 ## Sending custom Player 2 inputs
 
 1. Send a `MLT_REQ` packet for 2 players
-2. Send the following patch:
+2. Send the following patch (before inputs are sent from SNES to GB, this hook is run):
 
 ```
 .org $808
