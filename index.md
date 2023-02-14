@@ -1,1 +1,1 @@
-Relocated to https://leinacc-sgb-blog.netlify.app/
+Relocated to <https://leinacc-sgb-blog.netlify.app/>
