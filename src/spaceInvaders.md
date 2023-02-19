@@ -13,65 +13,65 @@ There are a couple other interesting details:
 
 _PreExecPacketCmdHook:
 ; Only override DATA_TRN
-	lda wCurrPacketCmd                           ; $0a00 : $ad, $c2, $02
-	cmp #CMD_DATA_TRN                            ; $0a03 : $c9, $10
-	bne @done                                    ; $0a05 : $d0, $4c
+    lda wCurrPacketCmd                           ; $0a00 : $ad, $c2, $02
+    cmp #CMD_DATA_TRN                            ; $0a03 : $c9, $10
+    bne @done                                    ; $0a05 : $d0, $4c
 
 ; Signal to GB that DATA_TRN is starting
-	lda #$01                                     ; $0a07 : $a9, $01
-	sta ICD2P_REGS.l                             ; $0a09 : $8f, $04, $60, $00
+    lda #$01                                     ; $0a07 : $a9, $01
+    sta ICD2P_REGS.l                             ; $0a09 : $8f, $04, $60, $00
 
 ; Do normal DATA_TRN, starting with setting the dest addr of the vram data
-	lda wSGBPacketsData+1                        ; $0a0d : $ad, $01, $06
-	sta wDataSendDestAddr.b                      ; $0a10 : $85, $b0
-	lda wSGBPacketsData+2                        ; $0a12 : $ad, $02, $06
-	sta wDataSendDestAddr.b+1                    ; $0a15 : $85, $b1
-	lda wSGBPacketsData+3                        ; $0a17 : $ad, $03, $06
-	sta wDataSendDestAddr.b+2                    ; $0a1a : $85, $b2
+    lda wSGBPacketsData+1                        ; $0a0d : $ad, $01, $06
+    sta wDataSendDestAddr.b                      ; $0a10 : $85, $b0
+    lda wSGBPacketsData+2                        ; $0a12 : $ad, $02, $06
+    sta wDataSendDestAddr.b+1                    ; $0a15 : $85, $b1
+    lda wSGBPacketsData+3                        ; $0a17 : $ad, $03, $06
+    sta wDataSendDestAddr.b+2                    ; $0a1a : $85, $b2
 
 ; Replicate DMA transferring the GB screen, catering to SGB BIOS versions
-	lda CART_VERSION.l                           ; $0a1c : $af, $db, $ff, $00
-	beq @ver0                                    ; $0a20 : $f0, $05
+    lda CART_VERSION.l                           ; $0a1c : $af, $db, $ff, $00
+    beq @ver0                                    ; $0a20 : $f0, $05
 
-	jsr DmaTransferAGBScreen_nonVer0             ; $0a22 : $20, $8d, $c5
-	bra +                                        ; $0a25 : $80, $03
+    jsr DmaTransferAGBScreen_nonVer0             ; $0a22 : $20, $8d, $c5
+    bra +                                        ; $0a25 : $80, $03
 
 @ver0:
-	jsr DmaTransferAGBScreen_ver0                ; $0a27 : $20, $90, $c5
+    jsr DmaTransferAGBScreen_ver0                ; $0a27 : $20, $90, $c5
 
 ; Signal to GB that we've loaded the screen, so it can load new data, while
 ; we're doing the mem copy below
 +   lda #$00                                     ; $0a2a : $a9, $00
-	sta ICD2P_REGS.l                             ; $0a2c : $8f, $04, $60, $00
+    sta ICD2P_REGS.l                             ; $0a2c : $8f, $04, $60, $00
 
 ; Set the GB screen's ram buffer as the src pointer
-	lda wCurrPtrGBTileDataBuffer                 ; $0a30 : $ad, $84, $02
-	sta wGBTileDataRamSrc.b                      ; $0a33 : $85, $98
-	lda wCurrPtrGBTileDataBuffer+1               ; $0a35 : $ad, $85, $02
-	sta wGBTileDataRamSrc.b+1                    ; $0a38 : $85, $99
-	lda #:wGBTileData0.b                         ; $0a3a : $a9, $7e
-	sta wGBTileDataRamSrc.b+2                    ; $0a3c : $85, $9a
+    lda wCurrPtrGBTileDataBuffer                 ; $0a30 : $ad, $84, $02
+    sta wGBTileDataRamSrc.b                      ; $0a33 : $85, $98
+    lda wCurrPtrGBTileDataBuffer+1               ; $0a35 : $ad, $85, $02
+    sta wGBTileDataRamSrc.b+1                    ; $0a38 : $85, $99
+    lda #:wGBTileData0.b                         ; $0a3a : $a9, $7e
+    sta wGBTileDataRamSrc.b+2                    ; $0a3c : $85, $9a
 
 ; Copy over the $1000 screen bytes
-	setaxy16                                     ; $0a3e : $c2, $30
-	ldx #$0800                                   ; $0a40 : $a2, $00, $08
-	ldy #$0000                                   ; $0a43 : $a0, $00, $00
+    setaxy16                                     ; $0a3e : $c2, $30
+    ldx #$0800                                   ; $0a40 : $a2, $00, $08
+    ldy #$0000                                   ; $0a43 : $a0, $00, $00
 
 @nextWord:
-	lda [wGBTileDataRamSrc], Y                   ; $0a46 : $b7, $98
-	sta [wDataSendDestAddr], Y                   ; $0a48 : $97, $b0
-	iny                                          ; $0a4a : $c8
-	iny                                          ; $0a4b : $c8
-	dex                                          ; $0a4c : $ca
-	bne @nextWord                                ; $0a4d : $d0, $f7
+    lda [wGBTileDataRamSrc], Y                   ; $0a46 : $b7, $98
+    sta [wDataSendDestAddr], Y                   ; $0a48 : $97, $b0
+    iny                                          ; $0a4a : $c8
+    iny                                          ; $0a4b : $c8
+    dex                                          ; $0a4c : $ca
+    bne @nextWord                                ; $0a4d : $d0, $f7
 
 ; Skip doing the original DATA_TRN
-	setaxy8                                      ; $0a4f : $e2, $30
-	pla                                          ; $0a51 : $68
-	pla                                          ; $0a52 : $68
+    setaxy8                                      ; $0a4f : $e2, $30
+    pla                                          ; $0a51 : $68
+    pla                                          ; $0a52 : $68
 
 @done:
-	rts                                          ; $0a53 : $60
+    rts                                          ; $0a53 : $60
 ```
 
 In short:
