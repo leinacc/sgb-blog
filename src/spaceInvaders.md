@@ -41,7 +41,7 @@ _PreExecPacketCmdHook:
 
 ; Signal to GB that we've loaded the screen, so it can load new data, while
 ; we're doing the mem copy below
-+	lda #$00                                     ; $0a2a : $a9, $00
++   lda #$00                                     ; $0a2a : $a9, $00
 	sta ICD2P_REGS.l                             ; $0a2c : $8f, $04, $60, $00
 
 ; Set the GB screen's ram buffer as the src pointer
