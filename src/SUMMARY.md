@@ -3,6 +3,7 @@
 # Guides
 
 - [LLE detection](lle_detection.md)
+- [SNES<->GB comms and hooks](comms_hooks.md)
 - [OBJ_TRN](obj_trn_guide.md)
 - [Controlling the game with the SNES mouse]()
 
